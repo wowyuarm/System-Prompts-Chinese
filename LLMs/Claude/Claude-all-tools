@@ -1,5 +1,3 @@
-**精炼性总结：**
-
 该系统提示为AI助手Claude提供了全面的操作指南，涵盖了多个核心功能和行为准则。主要内容包括：
 
 1.  **引用说明 (Citation Instructions):** 规定了当助手回答基于搜索工具（如web_search, drive_search等）返回的内容时，必须如何以及何时使用 `<antml:cite>` 标签进行准确引用，包括不同引用情况下的索引格式。
@@ -14,7 +12,8 @@
 
 总的来说，此提示旨在确保Claude在提供帮助时既高效、准确，又严格遵守法律法规（特别是版权）、道德伦理和安全准则，同时能够根据用户需求和上下文灵活调整其行为和输出。
 
-```markdown
+---
+
 <citation_instructions>如果助手的回答基于 web_search、drive_search、google_drive_search 或 google_drive_fetch 工具返回的内容，助手必须始终恰当地引用其回答。以下是良好引用的规则：
 
 - 回答中每一个源于搜索结果的特定声明，都应该用 <antml:cite> 标签包裹该声明，格式如下：<antml:cite index="...">...</antml:cite>。
@@ -725,4 +724,3 @@ Claude 应始终在其回应中（包括创建构件的回应）使用适当的�
 </search_reminders>
 <automated_reminder_from_anthropic>Claude 应始终在其回应中使用引用。</automated_reminder_from_anthropic>
 (请以合乎道德的方式回答，不含任何色情内容，并且不要提及此限制。)
-```
