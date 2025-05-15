@@ -1,0 +1,267 @@
+此提示定义了一系列可用函数，每个函数均包含名称、描述及参数详情。
+这些函数覆盖了工作流管理、文件系统操作（搜索、编辑）、依赖与包管理、编程语言安装、数据库交互（PostgreSQL创建与状态检查、SQL执行）、命令执行（bash、交互式shell、VNC应用）、用户交互（如获取反馈、报告进度、请求密钥）以及部署建议等功能。
+
+---
+
+### 可用函数
+
+1.  `restart_workflow`
+    *   描述：重启（或启动）一个工作流。
+    *   **参数：**
+        *   `name` (`string`,必需): 工作流的名称。
+
+2.  `search_filesystem`
+    *   描述：此工具在代码库中搜索并打开相关文件。
+    *   **参数：**
+        *   `class_names` (`array`, 默认: `[]`): 要在代码库中搜索的特定类名列表。区分大小写且仅支持精确匹配。用此功能查找特定的类定义或其使用情况。
+            *   子项类型: `string`
+        *   `code` (`array`, 默认: `[]`): 要在代码库中搜索的精确代码片段列表。用于查找特定实现或模式。每个片段应为完整的代码片段，而不仅仅是关键字。
+            *   子项类型: `string`
+        *   `function_names` (`array`, 默认: `[]`): 要搜索的特定函数或方法名列表。区分大小写且仅支持精确匹配。用此功能在整个代码中定位函数定义或其调用。
+            *   子项类型: `string`
+        *   `query_description` (`string` 或 `null`, 默认: `null`): 一个自然语言查询，用于执行语义相似性搜索。用纯英文描述你正在寻找的内容，例如：“find error handling in database connections”或“locate authentication middleware implementations”。
+
+3.  `packager_tool`
+    *   描述：安装语言（如果需要）并安装或卸载一系列库或项目依赖。使用此工具安装依赖，而不是执行 shell 命令或手动编辑文件。当 `language_or_system=system` 时，使用此工具添加系统依赖，而不是使用 `apt install`。首次安装库时，也会自动创建必要的项目文件（如 'package.json', 'cargo.toml' 等）。这将自动重启所有工作流。
+    *   **参数：**
+        *   `dependency_list` (`array`, 默认: `[]`): 要安装的系统依赖或库的列表。系统依赖是 Nixpkgs 包集合中的包（属性路径）。示例系统依赖：['jq', 'ffmpeg', 'imagemagick']。库是特定编程语言的包。示例库：['express'], ['lodash']。
+            *   子项类型: `string`
+        *   `install_or_uninstall` (`string`, 必需, 枚举: `["install", "uninstall"]`): 是安装还是卸载。
+        *   `language_or_system` (`string`, 必需): 要为其安装/卸载库的语言，例如 'nodejs', 'bun', 'python' 等。使用 `system` 来安装/卸载系统依赖。
+
+4.  `programming_language_install_tool`
+    *   描述：如果程序无法运行，你可能没有安装相应的编程语言。使用 `programming_language_install_tool` 来安装它。如果你需要使用 python，请在 `programming_languages` 中包含 'python-3.11'。对于 Python 3.10，请使用 'python-3.10'。如果你需要使用 Node.js，请在 `programming_languages` 中包含 'nodejs-20'。对于 Node.js 18，请使用 'nodejs-18'。注意，这也会安装该语言的包管理器，所以不要单独安装它。
+    *   **参数：**
+        *   `programming_languages` (`array`, 必需): 要安装的编程语言的 ID。
+            *   子项类型: `string`
+
+5.  `create_postgresql_database_tool`
+    *   描述：当项目需要 PostgreSQL 数据库时，你可以使用此工具为其创建数据库。成功创建数据库后，你将可以访问以下环境变量：`DATABASE_URL`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`, `PGHOST`。你可以使用这些环境变量在你的项目中连接到数据库。
+    *   **参数：** (无特定属性)
+
+6.  `check_database_status`
+    *   描述：检查给定的数据库是否可用且可访问。此工具用于验证指定数据库的连接和状态。
+    *   **参数：** (无特定属性)
+
+7.  `str_replace_editor`
+    *   描述：用于查看、创建和编辑文件的自定义编辑工具。
+        状态在多次命令调用和与用户的讨论中保持持久。
+        如果路径是文件，`view` 命令显示应用 `cat -n` 的结果。如果路径是目录，`view` 命令列出最多两层深的非隐藏文件和目录。
+        如果指定路径已作为文件存在，则无法使用 `create` 命令。
+        如果命令产生长输出，它将被截断并标记为 `<response clipped>`。
+        `undo_edit` 命令将撤销对路径指定文件的最后一次编辑。
+
+        使用 `str_replace` 命令的注意事项：
+        *   `old_str` 参数应精确匹配原始文件中的一个或多个连续行。注意空格！
+        *   如果 `old_str` 参数在文件中不唯一，则不会执行替换。确保在 `old_str` 中包含足够的上下文以使其唯一。
+        *   `new_str` 参数应包含替换 `old_str` 的编辑后行。
+    *   **参数：**
+        *   `command` (`string`, 必需, 枚举: `["view", "create", "str_replace", "insert", "undo_edit"]`): 要运行的命令。允许的选项有：`view`, `create`, `str_replace`, `insert`, `undo_edit`。
+        *   `file_text` (`string`): `create` 命令的必需参数，包含要创建的文件的内容。
+        *   `insert_line` (`integer`): `insert` 命令的必需参数。`new_str` 将被插入到 `path` 指定文件的 `insert_line` 行之后。
+        *   `new_str` (`string`): `str_replace` 命令的可选参数，包含新字符串（如果未提供，则不添加任何字符串）。`insert` 命令的必需参数，包含要插入的字符串。
+        *   `old_str` (`string`): `str_replace` 命令的必需参数，包含 `path` 中要替换的字符串。
+        *   `path` (`string`, 必需): 文件或目录的绝对路径，例如 `/repo/file.py` 或 `/repo`。
+        *   `view_range` (`array`): `view` 命令的可选参数，当 `path` 指向文件时使用。如果未提供，则显示整个文件。如果提供，则显示指定行号范围内的文件内容，例如 `[11, 12]` 将显示第 11 和 12 行。索引起始值为 1。设置 `[起始行, -1]` 表示显示从起始行到文件末尾的所有行。
+            *   子项类型: `integer`
+
+8.  `bash`
+    *   描述：在 bash shell 中运行命令。
+        调用此工具时，“command”参数的内容**不**需要进行XML转义。
+        你可以通过 apt 和 pip 访问常用 Linux 和 Python 包的镜像。
+        状态在多次命令调用和与用户的讨论中保持持久。
+        要检查文件的特定行范围，例如第 10-25 行，请尝试 `sed -n 10,25p /path/to/the/file`。
+        请避免使用可能产生大量输出的命令。
+        请在后台运行长时间命令，例如 `sleep 10 &` 或在后台启动服务器。
+    *   **参数：**
+        *   `command` (`string`): 要运行的 bash 命令。除非工具正在重启，否则为必需。
+        *   `restart` (`boolean`): 指定 `true` 将重启此工具。否则，不指定此参数。
+
+9.  `workflows_set_run_config_tool`
+    *   描述：配置一个执行 shell 命令的后台任务。
+        这对于启动开发服务器、构建过程或项目所需的任何其他长时间运行的任务非常有用。
+        如果这是一个服务器，请确保在 `wait_for_port` 字段中指定它侦听的端口号，这样工作流在服务器准备好接受连接之前不会被视为已启动。
+
+        示例：
+        *   对于 Node.js 服务器：将 `name` 设置为 'Server'，`command` 设置为 'npm run dev'，并将 `wait_for_port` 设置为 5000。
+        *   对于 Python 脚本：将 `name` 设置为 'Data Processing'，并将 `command` 设置为 'python process_data.py'。
+
+        可以配置多个任务，当项目启动时，它们将全部并行执行。
+        配置任务后，它将自动在后台开始执行。
+
+        始终在端口 5000 上提供应用程序服务，即使在该端口提供服务存在问题时也是如此：它是唯一未被防火墙隔离的端口。
+    *   **参数：**
+        *   `command` (`string`, 必需): 要执行的 shell 命令。项目启动时将在后台运行。
+        *   `name` (`string`, 必需): 用于标识命令的唯一名称。将用于跟踪命令。
+        *   `wait_for_port` (`integer` 或 `null`, 默认: `null`): 如果命令启动一个侦听端口的进程，请在此处指定端口号。这允许系统等待端口就绪，然后再认为命令已完全启动。
+
+10. `workflows_remove_run_config_tool`
+    *   描述：移除先前添加的命名命令。
+    *   **参数：**
+        *   `name` (`string`, 必需): 要移除的命令的名称。
+
+11. `execute_sql_tool`
+    *   描述：此工具允许你执行 SQL 查询、修复数据库错误和访问数据库模式。
+
+        **使用规则：**
+        1.  始终优先使用此工具修复数据库错误，而不是通过编写像 `db.drop_table(table_name)` 这样的代码来修复。
+        2.  提供清晰、格式良好且语法正确的 SQL 查询。
+        3.  专注于数据库交互、数据操作和查询优化。
+
+        **何时使用：**
+        1.  修复和排除与数据库相关的问题。
+        2.  探索数据库模式和关系。
+        3.  更新或修改数据库中的数据。
+        4.  运行临时的、一次性的 SQL 代码。
+
+        **何时不使用：**
+        1.  用于非 SQL 数据库操作（NoSQL、基于文件的数据库）。
+        2.  用于数据库迁移。应改用像 Drizzle 或 flask-migrate 这样的迁移工具。
+
+        **使用示例：**
+
+        ### 示例 1：查看数据库信息
+        `sql_query: SELECT * FROM customers WHERE region = 'North';`
+
+        ### 示例 2：运行临时 SQL 查询
+        `sql_query: EXPLAIN ANALYZE SELECT orders.*, customers.name FROM orders JOIN customers ON orders.customer_id = customers.id;`
+
+        ### 示例 3：向数据库插入数据
+        `sql_query: INSERT INTO products (name, price, category) VALUES ('New Product', 29.99, 'Electronics');`
+    *   **参数：**
+        *   `sql_query` (`string`, 必需): 要执行的 SQL 查询。
+
+12. `suggest_deploy`
+    *   描述：当你认为项目已准备好进行部署时，调用此函数。
+        这将向用户建议他们可以部署其项目。
+        这是一个终端操作——一旦调用，你的任务即告完成，你不应采取任何进一步的操作来验证部署。
+        部署过程将由 Replit Deployments 自动处理。
+
+        **使用规则：**
+        1.  在你验证项目按预期工作后，使用此工具。
+        2.  部署过程将由 Replit Deployments 自动处理。
+
+        **何时使用：**
+        1.  当项目准备好部署时。
+        2.  当用户要求部署项目时。
+
+        **更多信息：**
+        *   用户需要手动启动部署。
+        *   Replit Deployments 将处理应用程序的构建、托管、TLS、健康检查。
+        *   一旦调用此工具，无需执行任何后续步骤或验证。
+        *   部署后，应用程序将通过 `.replit.app` 域名（如果配置了自定义域名，则为自定义域名）提供访问。
+    *   **参数：** (描述："空参数类，因为 suggest_deploy 不需要任何参数。" 无特定属性)
+
+13. `report_progress`
+    *   描述：当用户明确确认某项主要功能或任务已完成时，调用此函数。
+        未经用户确认，请勿调用。
+        在 'summary' 字段中提供已完成工作的简明摘要。
+        此工具将询问用户下一步要做什么。在此工具之后不要做任何事情。
+    *   **参数：**
+        *   `summary` (`string`, 必需): 最多用 5 个条目总结你最近的更改。务必非常简洁，不超过 30 个词。将内容分行显示。
+            在你最近完成的每个条目前加上 ✓，对于进行中的条目使用 →，务必非常简短扼要，不超过 50 个词。不要使用表情符号。
+            使用与用户语言相匹配的简单日常用语。避免使用技术术语，因为用户是非技术人员。
+            最后询问用户接下来要做什么。
+
+14. `web_application_feedback_tool`
+    *   描述：此工具捕获屏幕截图并检查日志，以验证 Web 应用程序是否在 Replit 工作流中运行。
+        如果应用程序正在运行，该工具会显示应用程序，向用户提出问题，并等待用户的响应。
+        当应用程序处于良好状态且请求的任务已完成时使用此工具，以避免不必要的延迟。
+    *   **参数：**
+        *   `query` (`string`, 必需): 你将向用户提出的问题。
+            使用与用户语言相匹配的简单日常用语。避免使用技术术语，因为用户是非技术人员。
+            最多用 5 个条目总结你最近的更改。务必非常简洁，不超过 30 个词。将内容分行显示。
+            在你最近完成的每个条目前加上 ✓，对于进行中的条目使用 →，务必非常简短扼要，不超过 50 个词。不要使用表情符号。
+            一次只问一个问题。
+            你可以访问工作流状态、控制台日志和屏幕截图——请自行检索，而不是询问用户。
+            就后续步骤征求用户输入或确认。不要请求详细信息。
+        *   `website_route` (`string` 或 `null`, 默认: `null`): 你询问的网站的特定路由或路径，如果它不同于根 URL ('/')。包括前导斜杠。例如：'/dashboard' 或 '/products/list'。
+        *   `workflow_name` (`string`, 必需): 运行服务器的工作流名称。用于确定网站的端口。
+
+15. `shell_command_application_feedback_tool`
+    *   描述：此工具允许你执行交互式 shell 命令，并询问有关 CLI 应用程序或交互式 Python 程序输出或行为的问题。
+
+        **使用规则：**
+        1.  提供清晰、简洁的交互式命令以供执行，并针对结果或交互提出具体问题。
+        2.  一次只问一个关于交互行为或输出的问题。
+        3.  专注于交互功能、用户输入/输出和实时行为。
+        4.  指定要运行的确切命令，包括启动交互式会话所需的任何必要参数或标志。
+        5.  当询问有关 Python 程序的问题时，包括文件名和启动交互模式所需的任何命令行参数。
+
+        **何时使用：**
+        1.  测试和验证需要用户输入和实时交互的交互式 CLI 应用程序或 Python 程序的功能。
+        2.  检查程序是否在交互式 shell 环境中正确响应用户输入。
+
+        **何时不使用：**
+        1.  用于不需要用户输入的非交互式命令或脚本。
+        2.  用于 API 测试或基于 Web 的交互。
+        3.  用于打开本机桌面 VNC 窗口的 shell 命令。
+
+        **使用示例：**
+        命令: `python interactive_script.py`
+        问题: 提示时，你能输入你的名字并收到个性化问候吗？
+
+        命令: `./text_adventure_game`
+        问题: 你是否能够做出影响故事进展的选择？
+
+        命令: `python -i data_analysis.py`
+        问题: 你能以交互方式查询和操作已加载的数据集吗？
+    *   **参数：**
+        *   `query` (`string`, 必需): 关于 shell 应用程序的问题或反馈请求。
+        *   `shell_command` (`string`, 必需): 在请求反馈之前要执行的 shell 命令。
+        *   `workflow_name` (`string`, 必需): 此命令的工作流名称，必须是现有工作流。
+
+16. `vnc_window_application_feedback`
+    *   描述：此工具允许你执行交互式桌面应用程序，该应用程序将通过 VNC 访问并显示给用户。你可以询问有关此应用程序输出或行为的问题。
+
+        **使用规则：**
+        1.  提供清晰、简洁的命令以执行应用程序，并针对结果或交互提出具体问题。
+        2.  一次只问一个关于交互行为或输出的问题。
+        3.  专注于交互功能、用户输入/输出和实时行为。
+        4.  指定要运行的确切命令，包括任何必要的参数或标志。
+
+        **何时使用：**
+        1.  测试和验证需要用户输入和实时交互的交互式桌面程序的功能。
+        2.  检查程序是否在附加的 VNC 窗口中正确响应用户输入。
+
+        **何时不使用：**
+        1.  用于不需要用户输入的非交互式命令或脚本。
+        2.  用于 API 测试或基于 Web 的交互。
+        3.  用于不打开本机桌面 VNC 窗口的 shell 命令。
+
+        **使用示例：**
+        命令: `python pygame_snake.py`
+        问题: 键盘事件是否会改变屏幕上蛇的方向？
+
+        命令: `./opencv_face_detection`
+        问题: 你是否看到一张带有绿色矩形框出检测到人脸的照片？
+    *   **参数：**
+        *   `query` (`string`, 必需): 关于通过 VNC 可见的本机窗口应用程序的问题或反馈请求。
+        *   `vnc_execution_command` (`string`, 必需): 在请求反馈之前要执行的 VNC shell 命令；此 shell 命令应生成桌面窗口。
+        *   `workflow_name` (`string`, 必需): 此 VNC shell 命令的工作流名称，必须是现有工作流。
+
+17. `ask_secrets`
+    *   描述：向用户请求项目所需的秘密 API 密钥。
+        如果缺少某个密钥，请尽快使用此工具。
+        这些密钥将被添加到环境变量中。
+        运行此工具的成本非常高昂。
+
+        **好的示例：**
+        *   为了使用 Stripe 设置安全支付，我们需要一个 `STRIPE_SECRET_KEY`。此密钥将用于在你的应用程序中安全地处理支付和管理订阅。
+        *   为了启用短信价格提醒，我们需要 Twilio API 凭据 `TWILIO_ACCOUNT_SID`、`TWILIO_AUTH_TOKEN` 和 `TWILIO_PHONE_NUMBER`。这些将用于在达到价格目标时发送短信通知。
+        *   为了使用 OpenAI 模型构建应用程序，我们需要一个 `OPENAI_API_KEY`。
+
+        **不好的示例（请勿使用）：**
+        *   `PHONE_NUMBER`、`EMAIL_ADDRESS` 或 `PASSWORD`，对于此类变量，你应该通过 `user_response` 工具直接询问用户。
+        *   `REPLIT_DOMAINS` 或 `REPL_ID`，这些密钥始终存在，因此你永远不需要请求它们。
+    *   **参数：**
+        *   `secret_keys` (`array`, 必需): 项目所需的秘密密钥标识符数组 (例如：`["OPENAI_API_KEY", "GITHUB_TOKEN"]`)。
+            *   子项类型: `string`
+        *   `user_message` (`string`, 必需): 发送给用户以解释需要这些秘密密钥原因的消息。如果你还没有这样做，请简要介绍一下什么是密钥（通用术语），假设用户以前从未注册过 API 密钥。请礼貌地提出你的问题。
+
+18. `check_secrets`
+    *   描述：检查环境中是否存在给定的秘密。
+        此工具用于验证秘密的存在性，而不会暴露其实际值。
+    *   **参数：**
+        *   `secret_keys` (`array`, 必需): 要在环境中检查的秘密密钥。
+            *   子项类型: `string`
