@@ -9,7 +9,7 @@
     *   [Kimi](LLMs/Kimi)
     *   ... (更多模型待补充)
 
-*   **Agents (AI 智能体)：** 包含了在特定领域表现突出的 AI Agent 产品。
+*   **AI Agent (智能体)：** 包含了在特定领域表现突出的 AI Agent 产品。
     *   [Bolt](Agents/Bolt)
     *   [Cline](Agents/Cline)
     *   [Cursor](Agents/Cursor) - 深度拆解文章：[从Cursor出发：对于Agent更好的理解与运用](https://yxnexus.com/posts/20250420064800-cursor-system-prompt/)
@@ -48,6 +48,7 @@
 *   **促进透明与安全：** 我们相信，在负责任的前提下，对系统提示词进行适度的公开和探讨，有助于提升整个行业对 AI 安全性和行为可控性的认知，并可能促进更健壮的安全防护机制的建设。（当然，我们也呼吁所有使用者尊重原始开发者的努力和知识产权。）
 
 正如我们观察到的，即使是一些能力强大的模型（如 Grok、DeepSeek），其系统提示词也可能出人意料地简洁，这本身就引人深思。而对于功能各异的 AI Agent（特别是 Coding 类 Agent），其系统提示词更是展现出丰富多样的设计特色。
+
 ---
 
 
